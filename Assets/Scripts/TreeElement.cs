@@ -1,0 +1,48 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UIElements;
+namespace PlantsEvolution
+{
+public class TreeElement
+{
+    public readonly int TreeID;
+    public readonly Color Color;
+    public GeneticElement GeneticElement { get; private set;}
+
+
+    public PointElement PointElement { get;}
+    private List<Vector3> GroupPositions;
+
+    public void Connect(Vector3 position)
+    {
+        GroupPositions.Add(position);
+    }
+
+    public TreeElement(int treeID, GeneticElement geneticElement, PointElement pointElement, Color color)
+    {
+        TreeID = treeID;
+        this.GeneticElement = geneticElement;
+        PointElement = pointElement;
+        this.Color = color;
+        GroupPositions = new List<Vector3>();
+    }
+
+    public int[] GetGen(int CellGenNumber)
+    {
+        if (CellGenNumber < 0 || CellGenNumber >= GeneticElement.GeneticData.Length)
+        {
+            Debug.LogError($"[TreeElement] Invalid CellGenNumber: {CellGenNumber}. It must be between 0 and {GeneticElement.GeneticData.Length - 1}.");
+            return null;
+        }
+        return GeneticElement.GeneticData[CellGenNumber];
+    }
+
+    public void Destroy(CellGrid cellGrid)
+    {
+        foreach (var position in GroupPositions)
+            {
+                cellGrid.RemoveCell(position);
+            }
+    }
+}
+}
