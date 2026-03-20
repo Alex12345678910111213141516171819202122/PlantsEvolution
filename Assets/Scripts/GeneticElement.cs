@@ -73,5 +73,18 @@ public class GeneticElement
             }
 
         }
+
+    public GeneticElement Clone()
+    {
+        GeneticElement clone = new GeneticElement();
+
+        for (int i = 0; i < GeneticData.Length; i++)
+        {
+            int[] gene = GeneticData[i];
+            clone.GeneticData[i] = gene == null ? null : (int[])gene.Clone();
+        }
+
+        return clone;
+    }
 }
 }

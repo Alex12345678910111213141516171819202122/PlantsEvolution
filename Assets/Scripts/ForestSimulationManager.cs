@@ -9,26 +9,34 @@ public class ForestSimulationManager : MonoBehaviour
 {
     [SerializeField] 
     bool DebugMode = true;
+    [SerializeField]
+    bool HighlightTopCells = false;
+    [SerializeField]
+    int initialTreesCount = 5;
     private CellGrid _cellGrid;
     private List<TreeElement> Trees = new List<TreeElement>();
     private PlantingProcess _plantingProcess;
     private GrowthProcess _growthProcess;
     private bool photosynthesisProcessed = false;
 
+    private TreesEvolutionProcess _evolutionProcess;
+
     private CommonTreeBuilder treeBuilder;
     private PhotosyntesisProcess _photosyntesisProcess;
     private InstancedRenderer _instancedRenderer;
     private void Init()
     {
-        _cellGrid = new CellGrid();
+        _cellGrid = new CellGrid(new Vector3Int(0, 0, 0), 2.0f, 10, 10, 10.0f, 5);
 
         Trees = new List<TreeElement>();
 
-        _growthProcess = new GrowthProcess();
+        _growthProcess = new GrowthProcess(_cellGrid.cellSize);
 
         _plantingProcess = new PlantingProcess(_growthProcess, _cellGrid);
 
         _photosyntesisProcess = new PhotosyntesisProcess();
+
+        _evolutionProcess = new TreesEvolutionProcess(mutationRate: 1, evolutionRate: 2);
 
         treeBuilder = new CommonTreeBuilder();
 
@@ -43,10 +51,6 @@ public class ForestSimulationManager : MonoBehaviour
         cellMaterial.enableInstancing = true;
         cellMaterial.color = Color.white;
         _instancedRenderer = InstancedRenderer.CreateWithPrimitive(PrimitiveType.Cube, cellMaterial);
-        for(int i = 0; i < 10; i++)
-        {
-            Trees.Add(_plantingProcess.PlantTree(treeBuilder, Trees.Count, _cellGrid.Position + new Vector3Int(Trees.Count * 2, 0, 0)));
-        }
     }
     private Coroutine _simulateRoutine;
 private Coroutine _plantRoutine;
@@ -54,7 +58,7 @@ private Coroutine _plantRoutine;
 
 private IEnumerator SimulateLoop()
 {
-    var wait = new WaitForSeconds(0.1f);
+    var wait = new WaitForSeconds(0.05f);
     while (true) { Simulate(); yield return wait; }
 }
 
@@ -84,10 +88,7 @@ private void OnDisable()
         }
         Debug.unityLogger.logEnabled = true;
 
-
-        TreeElement tree = _plantingProcess.PlantTree(treeBuilder, 1, _cellGrid.Position);
-
-        Trees.Add(tree);
+        Trees = _plantingProcess.PlantInitialTrees(treeBuilder, initialTreesCount*initialTreesCount);
 
         Debug.Log($"[Simulation] Simulation initialized with {Trees.Count} tree(s)", this);
     }
@@ -96,10 +97,13 @@ private void OnDisable()
         if (_instancedRenderer == null || _cellGrid == null) return;
         // ----------------------------------------------------------------------------------------
         Dictionary<int, Color> treeColorsById = BuildTreeColorLookup();
+        HashSet<Vector3> topCellPositions = HighlightTopCells ? _cellGrid.GetTopCellPositions() : null;
         _instancedRenderer.Render(
             _cellGrid.Cells,
             cellEntry => Matrix4x4.TRS(cellEntry.Key, Quaternion.identity, Vector3.one),
-            cellEntry => treeColorsById.TryGetValue(cellEntry.Value.CellID, out Color color) ? color : Color.white
+            cellEntry => (topCellPositions != null && topCellPositions.Contains(cellEntry.Key))
+                ? Color.white
+                : (treeColorsById.TryGetValue(cellEntry.Value.CellID, out Color color) ? color : Color.white)
         );
         // ----------------------------------------------------------------------------------------
         if (DebugMode)
@@ -153,29 +157,21 @@ private void OnDisable()
 
     private void PlantNewGeneration()
     {
-            List<TreeElement> bestTrees = GetBestTrees(Trees, 3);
-            ClearSimulation();
-            for (int i = 0; i < bestTrees.Count; i++)
-            {
-                TreeElement tree = bestTrees[i];
-                for (int j = 0; j < 3; j ++)
-                {
-                    GeneticElement mutatedGeneticElement = tree.GeneticElement;
-                    mutatedGeneticElement.Mutate();
-                    TreeElement MutatedTree = new TreeElement(Trees.Count, mutatedGeneticElement, new PointElement(), tree.Color);
-                    Trees.Add(MutatedTree);
-                    _plantingProcess.PlantTree(MutatedTree, _cellGrid.Position + new Vector3Int((i * 10),0,j*10));
-                }
-            }
+        List<TreeElement> evolvedTrees = _evolutionProcess.Process(Trees, initialTreesCount);
+        if (evolvedTrees == null || evolvedTrees.Count == 0)
+        {
+            Debug.LogWarning("[PlantNewGeneration] No evolved trees to plant.");
+            return;
+        }
+
+        ClearSimulation();
+
+        _plantingProcess.PlantNewGeneration(evolvedTrees);
+        Trees = new List<TreeElement>(evolvedTrees);
+
+        Debug.Log($"[PlantNewGeneration] Planted new generation with {evolvedTrees.Count} tree(s).", this);
     }
         
-    private List<TreeElement> GetBestTrees(List<TreeElement> trees, int n)
-    {
-        return trees
-            .OrderByDescending(tree => tree.PointElement.Points)
-            .Take(n)
-            .ToList();
-    }
 
     private Dictionary<int, Color> BuildTreeColorLookup()
     {

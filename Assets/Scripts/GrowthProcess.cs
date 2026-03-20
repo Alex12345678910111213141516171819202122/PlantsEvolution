@@ -5,19 +5,22 @@ namespace PlantsEvolution
 {
     public class GrowthProcess
     {
-        List<Vector3Int> growthOffsets = new List<Vector3Int>()
-        {
-            new Vector3Int(1,0,0),
-            new Vector3Int(-1,0,0),
-            new Vector3Int(0,1,0),
-            new Vector3Int(0,-1,0),
-            new Vector3Int(0,0,1),
-            new Vector3Int(0,0,-1)
-        };
+        List<Vector3> growthOffsets;
         List<Vector3> nextGrowthPositions;
+        private readonly float cellSize;
 
-        public GrowthProcess()
+        public GrowthProcess(float cellSize)
         {
+            this.cellSize = cellSize;
+            growthOffsets = new List<Vector3>()
+        {
+            new Vector3(1,0,0) * cellSize,
+            new Vector3(-1,0,0) * cellSize,
+            new Vector3(0,1,0) * cellSize,
+            new Vector3(0,-1,0) * cellSize,
+            new Vector3(0,0,1) * cellSize,
+            new Vector3(0,0,-1) * cellSize
+        };
             nextGrowthPositions = new List<Vector3>();
             Debug.Log("[GrowthProcess] Initialized with empty growth positions list");
         }
