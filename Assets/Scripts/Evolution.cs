@@ -16,71 +16,91 @@ public class TreesEvolutionProcess
 
     public List<TreeElement> Process(List<TreeElement> treeElements, int TreesCount)
     {
-        if (treeElements == null)
+        if (treeElements == null || treeElements.Count == 0 || TreesCount <= 0 || EvolutionRate < 0 || MutationRate < 0)
         {
-            Debug.LogError("[Evolution] treeElements is null. Evolution cannot proceed.");
-            return null;
-        }
-
-        if (treeElements.Count <= 0)
-        {
-            Debug.LogError("[Evolution] treeElements is empty. Evolution cannot proceed.");
-            return null;
-        }
-
-        if (TreesCount <= 0)
-        {
-            Debug.LogError($"[Evolution] Invalid TreesCount: {TreesCount}. Expected a positive cube edge size.");
-            return null;
-        }
-
-        if (EvolutionRate < 0)
-        {
-            Debug.LogError($"[Evolution] Invalid EvolutionRate: {EvolutionRate}. Evolution cannot proceed.");
+            Debug.LogError("[Evolution] Invalid input params.");
             return null;
         }
 
         int targetTreesCount = TreesCount * TreesCount;
-        int treesToEvolve = Mathf.Max(1, Mathf.CeilToInt(treeElements.Count / Mathf.Pow(2, EvolutionRate - 1)));
-        List<TreeElement> bestTrees = GetBestTrees(treeElements, treesToEvolve);
-        List<TreeElement> evolvedTrees = new List<TreeElement>(bestTrees);
+        int safeExponent = Mathf.Max(0, EvolutionRate - 1);
+        int treesToEvolve = Mathf.Max(1, Mathf.CeilToInt(treeElements.Count / Mathf.Pow(2, safeExponent)));
 
-        foreach (TreeElement tree in bestTrees.ToList())
+        List<TreeElement> parents = GetBestTrees(treeElements, treesToEvolve);
+        if (parents.Count == 0)
         {
-            if (tree == null)
+            Debug.LogError("[Evolution] No valid parents.");
+            return null;
+        }
+
+        List<TreeElement> newGeneration = new List<TreeElement>(targetTreesCount);
+
+        // 1. Сначала добавляем лучших родителей БЕЗ мутаций
+        foreach (TreeElement parent in parents)
+        {
+            if (newGeneration.Count >= targetTreesCount) break;
+            if (parent?.GeneticElement == null) continue;
+
+            TreeElement eliteTree = new TreeElement(
+                newGeneration.Count,
+                parent.GeneticElement.Clone(), // Клон без мутации
+                new PointElement(),
+                parent.Color
+            );
+            newGeneration.Add(eliteTree);
+        }
+
+        // 2. Заполняем остальное пространство мутированными детьми
+        int childrenPerParent = Mathf.Max(1, EvolutionRate);
+
+        while (newGeneration.Count < targetTreesCount)
+        {
+            bool createdAtLeastOne = false;
+
+            foreach (TreeElement parent in parents)
             {
-                Debug.LogWarning("[Evolution] Null tree element found in best trees list. Skipping.");
-                continue;
+                if (newGeneration.Count >= targetTreesCount) break;
+                if (parent?.GeneticElement == null) continue;
+
+                for (int i = 0; i < childrenPerParent && newGeneration.Count < targetTreesCount; i++)
+                {
+                    GeneticElement childGenes = parent.GeneticElement.Clone();
+                    if (childGenes == null) continue;
+
+                    if (EvolutionRate > 0)
+                        childGenes.Mutate(MutationRate);
+
+                    // ID строго по индексу в новой генерации (без дыр)
+                    int childId = newGeneration.Count;
+
+                    TreeElement child = new TreeElement(
+                        childId,
+                        childGenes,
+                        new PointElement(),
+                        parent.Color
+                    );
+
+                    newGeneration.Add(child);
+                    createdAtLeastOne = true;
+                }
             }
 
-            for (int i = 0; i < EvolutionRate; i++)
+            if (!createdAtLeastOne)
             {
-                if (evolvedTrees.Count >= targetTreesCount)
-                {
-                    return evolvedTrees;
-                }
-
-                GeneticElement newGeneticElement = tree.GeneticElement?.Clone();
-                if (newGeneticElement == null)
-                {
-                    Debug.LogWarning("[Evolution] Tree has null genetic element. Skipping mutation.");
-                    continue;
-                }
-
-                newGeneticElement.Mutate(MutationRate);
-                TreeElement mutatedTree = new TreeElement(evolvedTrees.Count, newGeneticElement, new PointElement(), tree.Color);
-                evolvedTrees.Add(mutatedTree);
+                Debug.LogError("[Evolution] Failed to produce children.");
+                return null;
             }
         }
 
-        return evolvedTrees;
+        return newGeneration;
     }
 
     private List<TreeElement> GetBestTrees(List<TreeElement> trees, int n)
     {
         return trees
-            .OrderByDescending(tree => tree.PointElement.Points)
-            .Take(n)
+            .Where(t => t?.GeneticElement != null)
+            .OrderByDescending(t => t.PointElement?.Score ?? int.MinValue)
+            .Take(Mathf.Max(1, n))
             .ToList();
     }
 }

@@ -56,7 +56,6 @@ public class PlantingProcess
                 break;
             }
             List<Vector3> RPositions = new List<Vector3>(cellGrid.GrowthPositions);
-            RPositions.Shuffle();
             growthProcess.AddCell(cellGrid, trees[i], 1, RPositions[i]);
         }
     }

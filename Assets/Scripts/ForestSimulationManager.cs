@@ -12,7 +12,7 @@ public class ForestSimulationManager : MonoBehaviour
     [SerializeField]
     bool HighlightTopCells = false;
     [SerializeField]
-    int initialTreesCount = 5;
+    int initialTreesCount = 10;
     private CellGrid _cellGrid;
     private List<TreeElement> Trees = new List<TreeElement>();
     private PlantingProcess _plantingProcess;
@@ -23,10 +23,11 @@ public class ForestSimulationManager : MonoBehaviour
 
     private CommonTreeBuilder treeBuilder;
     private PhotosyntesisProcess _photosyntesisProcess;
-    private InstancedRenderer _instancedRenderer;
+    private TreeCellRenderer _treeCellRenderer;
+    
     private void Init()
     {
-        _cellGrid = new CellGrid(new Vector3Int(0, 0, 0), 2.0f, 10, 10, 10.0f, 5);
+        _cellGrid = new CellGrid(new Vector3Int(0, 0, 0), 1.0f, 5, 5, 30.0f, initialTreesCount);
 
         Trees = new List<TreeElement>();
 
@@ -36,7 +37,7 @@ public class ForestSimulationManager : MonoBehaviour
 
         _photosyntesisProcess = new PhotosyntesisProcess();
 
-        _evolutionProcess = new TreesEvolutionProcess(mutationRate: 1, evolutionRate: 2);
+        _evolutionProcess = new TreesEvolutionProcess(mutationRate: 2, evolutionRate: 2);
 
         treeBuilder = new CommonTreeBuilder();
 
@@ -50,7 +51,8 @@ public class ForestSimulationManager : MonoBehaviour
         Material cellMaterial = new Material(instancedColorShader);
         cellMaterial.enableInstancing = true;
         cellMaterial.color = Color.white;
-        _instancedRenderer = InstancedRenderer.CreateWithPrimitive(PrimitiveType.Cube, cellMaterial);
+        
+        _treeCellRenderer = TreeCellRenderer.CreateWithPrimitive(PrimitiveType.Cube, cellMaterial);
     }
     private Coroutine _simulateRoutine;
 private Coroutine _plantRoutine;
@@ -58,13 +60,13 @@ private Coroutine _plantRoutine;
 
 private IEnumerator SimulateLoop()
 {
-    var wait = new WaitForSeconds(0.05f);
+    var wait = new WaitForSeconds(0.1f);
     while (true) { Simulate(); yield return wait; }
 }
 
 private IEnumerator PlantGenerationLoop()
 {
-    var wait = new WaitForSeconds(5);
+    var wait = new WaitForSeconds(10);
     while (true) { PlantNewGeneration(); yield return wait; }
 }
 
@@ -94,30 +96,18 @@ private void OnDisable()
     }
     public void Update()
     {
-        if (_instancedRenderer == null || _cellGrid == null) return;
-        // ----------------------------------------------------------------------------------------
-        Dictionary<int, Color> treeColorsById = BuildTreeColorLookup();
-        HashSet<Vector3> topCellPositions = HighlightTopCells ? _cellGrid.GetTopCellPositions() : null;
-        _instancedRenderer.Render(
-            _cellGrid.Cells,
-            cellEntry => Matrix4x4.TRS(cellEntry.Key, Quaternion.identity, Vector3.one),
-            cellEntry => (topCellPositions != null && topCellPositions.Contains(cellEntry.Key))
-                ? Color.white
-                : (treeColorsById.TryGetValue(cellEntry.Value.CellID, out Color color) ? color : Color.white)
-        );
-        // ----------------------------------------------------------------------------------------
+        if (_cellGrid == null || _treeCellRenderer == null) return;
+        
+        // Рендерим деревья (каждое дерево батчами по 1023)
+        _treeCellRenderer.RenderTrees(Trees, Quaternion.identity, Vector3.one);
+    
         if (DebugMode)
         {
             HandleDebugInput();
         }
     }
     private void HandleDebugInput()
-    {
-        if (Input.GetKeyDown(KeyCode.P))
-        {   
-            TreeElement tree = _plantingProcess.PlantTree(treeBuilder, Trees.Count, _cellGrid.Position + new Vector3Int(Trees.Count * 2, 0, 0));
-            Trees.Add(tree);
-        }
+    {        
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _growthProcess.Process(Trees, _cellGrid);
@@ -136,7 +126,7 @@ private void OnDisable()
         }
         if(Input.GetKeyDown(KeyCode.N))
         {
-            PlantNewGeneration();   
+            PlantNewGeneration();
         }
     }
 
@@ -144,6 +134,7 @@ private void OnDisable()
     {
         _growthProcess.Process(Trees, _cellGrid);
         _photosyntesisProcess.Process(Trees, _cellGrid.topCellId);
+        
     }
     private void ClearSimulation()
     {
@@ -170,19 +161,6 @@ private void OnDisable()
         Trees = new List<TreeElement>(evolvedTrees);
 
         Debug.Log($"[PlantNewGeneration] Planted new generation with {evolvedTrees.Count} tree(s).", this);
-    }
-        
-
-    private Dictionary<int, Color> BuildTreeColorLookup()
-    {
-        Dictionary<int, Color> treeColorsById = new Dictionary<int, Color>(Trees.Count);
-
-        foreach (TreeElement tree in Trees)
-        {
-            treeColorsById[tree.TreeID] = tree.Color;
-        }
-
-        return treeColorsById;
     }
 }
 }

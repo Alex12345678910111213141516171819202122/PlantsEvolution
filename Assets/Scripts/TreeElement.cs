@@ -9,9 +9,12 @@ public class TreeElement
     public readonly Color Color;
     public GeneticElement GeneticElement { get; private set;}
 
+    public const int MaxPhotosyntesisKCount = 100; 
+
+    public const float PhotosyntesisK = 0.3f;
 
     public PointElement PointElement { get;}
-    private List<Vector3> GroupPositions;
+    public List<Vector3> GroupPositions { get; private set; }
 
     public void Connect(Vector3 position)
     {
@@ -27,9 +30,9 @@ public class TreeElement
         GroupPositions = new List<Vector3>();
     }
 
-    public int[] GetGen(int CellGenNumber)
+    public byte[] GetGen(byte CellGenNumber)
     {
-        if (CellGenNumber < 0 || CellGenNumber >= GeneticElement.GeneticData.Length)
+        if (CellGenNumber >= GeneticElement.GeneticData.Length)
         {
             Debug.LogError($"[TreeElement] Invalid CellGenNumber: {CellGenNumber}. It must be between 0 and {GeneticElement.GeneticData.Length - 1}.");
             return null;

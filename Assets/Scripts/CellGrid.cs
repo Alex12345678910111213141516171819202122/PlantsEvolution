@@ -165,11 +165,11 @@ public class CellGrid
         return new Vector3(wrappedX, position.y, wrappedZ);
     }
 
-    public bool AddCell( int gen, int cellID, ref Vector3 position)
+    public bool AddCell( byte gen, int cellID, ref Vector3 position)
     {
-        position = OutOfBounds(position);
+        // position = OutOfBounds(position);
 
-        if (position.y < 0 || position.y >= ySize)
+        if (position.y < 0 || position.y >= ySize || position.x < Position.x || position.x >= Position.x + xSize * cellSize || position.z < Position.z || position.z >= Position.z + zSize * cellSize)
         {
             return false;
         }

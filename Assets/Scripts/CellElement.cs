@@ -7,13 +7,13 @@ namespace PlantsEvolution
 {
 public class CellElement
     {
-        public CellElement(int cellID, int cellGenNumber)
+        public CellElement(int cellID, byte cellGenNumber)
         {
             CellID = cellID;
             CellGenNumber = cellGenNumber;
         }
         public int CellID { get; private set; }
-        public int CellGenNumber { get; private set; }
+        public byte CellGenNumber { get; private set; }
 
     }
 }

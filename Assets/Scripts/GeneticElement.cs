@@ -3,28 +3,28 @@ namespace PlantsEvolution
 {
 public class GeneticElement
 {
-    const int size = 6;
-    const int length = 50;
-    const int maxCells = 2;
-    const int mutationRate = 1;
-    public readonly int[][] GeneticData;
+    const byte size = 6;
+    const byte length = 50;
+    const byte maxCells = 2;
+    const byte mutationRate = 1;
+    public readonly byte[][] GeneticData;
 
 
-    public GeneticElement(int length = length, int maxCells = maxCells, int size = size)
+    public GeneticElement(byte length = length, byte maxCells = maxCells, byte size = size)
     {
-        GeneticData = new int[length][];
+        GeneticData = new byte[length][];
 
         for (int i = 1; i < length; i++)
         {
-            GeneticData[i] = new int[size + 1];
-            int k = UnityEngine.Random.Range(0, maxCells + 1);
+            GeneticData[i] = new byte[size + 1];
+            byte k = (byte)UnityEngine.Random.Range(0, maxCells + 1);
             GeneticData[i][size] = k;
             for(int j = 0; j < k; j++)
             {
                 int cellIndex = UnityEngine.Random.Range(0, size);
                 if(GeneticData[i][cellIndex] == 0)
                 {
-                    GeneticData[i][cellIndex] = UnityEngine.Random.Range(1, length);
+                    GeneticData[i][cellIndex] = (byte)UnityEngine.Random.Range(1, length);
                 }
                 else
                 {
@@ -69,7 +69,7 @@ public class GeneticElement
                     {
                         GeneticData[geneIndex][size]++;
                     }
-                    GeneticData[geneIndex][cellIndex] = Random.Range(1, GeneticData.Length);
+                    GeneticData[geneIndex][cellIndex] = (byte)Random.Range(1, GeneticData.Length);
             }
 
         }
@@ -80,8 +80,8 @@ public class GeneticElement
 
         for (int i = 0; i < GeneticData.Length; i++)
         {
-            int[] gene = GeneticData[i];
-            clone.GeneticData[i] = gene == null ? null : (int[])gene.Clone();
+            byte[] gene = GeneticData[i];
+            clone.GeneticData[i] = gene == null ? null : (byte[])gene.Clone();
         }
 
         return clone;
