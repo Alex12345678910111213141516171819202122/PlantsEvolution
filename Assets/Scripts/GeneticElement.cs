@@ -4,7 +4,7 @@ namespace PlantsEvolution
 public class GeneticElement
 {
     const byte size = 6;
-    const byte length = 50;
+    const byte length = 200;
     const byte maxCells = 2;
     const byte mutationRate = 1;
     public readonly byte[][] GeneticData;

@@ -3,12 +3,12 @@ using System.Linq;
 using PlantsEvolution;
 using UnityEngine;
 
-public class TreesEvolutionProcess
+public class TreeEvolutionProcess
 {
     int MutationRate;
     int EvolutionRate;
 
-    public TreesEvolutionProcess(int mutationRate, int evolutionRate)
+    public TreeEvolutionProcess(int mutationRate, int evolutionRate)
     {
         MutationRate = mutationRate;
         EvolutionRate = evolutionRate;

@@ -9,9 +9,7 @@ public class TreeElement
     public readonly Color Color;
     public GeneticElement GeneticElement { get; private set;}
 
-    public const int MaxPhotosyntesisKCount = 100; 
 
-    public const float PhotosyntesisK = 0.3f;
 
     public PointElement PointElement { get;}
     public List<Vector3> GroupPositions { get; private set; }

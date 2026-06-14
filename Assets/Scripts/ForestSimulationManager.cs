@@ -19,7 +19,7 @@ public class ForestSimulationManager : MonoBehaviour
     private GrowthProcess _growthProcess;
     private bool photosynthesisProcessed = false;
 
-    private TreesEvolutionProcess _evolutionProcess;
+    private TreeEvolutionProcess _evolutionProcess;
 
     private CommonTreeBuilder treeBuilder;
     private PhotosyntesisProcess _photosyntesisProcess;
@@ -37,7 +37,7 @@ public class ForestSimulationManager : MonoBehaviour
 
         _photosyntesisProcess = new PhotosyntesisProcess();
 
-        _evolutionProcess = new TreesEvolutionProcess(mutationRate: 2, evolutionRate: 2);
+        _evolutionProcess = new TreeEvolutionProcess(mutationRate: 2, evolutionRate: 2);
 
         treeBuilder = new CommonTreeBuilder();
 
@@ -118,7 +118,7 @@ private void OnDisable()
         }
         if(photosynthesisProcessed)
         {
-            _photosyntesisProcess.Process(Trees, _cellGrid.topCellId);
+            PhotosynthesisAllLayers();
         }
         if(Input.GetKeyDown(KeyCode.I))
         {
@@ -133,9 +133,20 @@ private void OnDisable()
     private void Simulate()
     {
         _growthProcess.Process(Trees, _cellGrid);
-        _photosyntesisProcess.Process(Trees, _cellGrid.topCellId);
-        
+        PhotosynthesisAllLayers();
     }
+
+    private void PhotosynthesisAllLayers()
+        {
+            float sideK = 1.2f;
+            _photosyntesisProcess.Process(Trees, _cellGrid.topCellId);
+            _photosyntesisProcess.Process(Trees, _cellGrid.maxZCellId, sideK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.maxXCellId, sideK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.minZCellId, sideK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.minXCellId, sideK);
+        }
+
+
     private void ClearSimulation()
     {
         foreach (var tree in Trees)
