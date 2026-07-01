@@ -52,7 +52,7 @@ public class ForestSimulationManager : MonoBehaviour
         cellMaterial.enableInstancing = true;
         cellMaterial.color = Color.white;
         
-        _treeCellRenderer = TreeCellRenderer.CreateWithPrimitive(PrimitiveType.Cube, cellMaterial);
+        _treeCellRenderer = TreeCellRenderer.CreateWithPrimitive(PrimitiveType.Sphere, cellMaterial);
     }
     private Coroutine _simulateRoutine;
 private Coroutine _plantRoutine;
@@ -66,7 +66,7 @@ private IEnumerator SimulateLoop()
 
 private IEnumerator PlantGenerationLoop()
 {
-    var wait = new WaitForSeconds(10);
+    var wait = new WaitForSeconds(6);
     while (true) { PlantNewGeneration(); yield return wait; }
 }
 
@@ -138,12 +138,12 @@ private void OnDisable()
 
     private void PhotosynthesisAllLayers()
         {
-            float sideK = 1.2f;
+            float sidePhotoK = 1.2f;
             _photosyntesisProcess.Process(Trees, _cellGrid.topCellId);
-            _photosyntesisProcess.Process(Trees, _cellGrid.maxZCellId, sideK);
-            _photosyntesisProcess.Process(Trees, _cellGrid.maxXCellId, sideK);
-            _photosyntesisProcess.Process(Trees, _cellGrid.minZCellId, sideK);
-            _photosyntesisProcess.Process(Trees, _cellGrid.minXCellId, sideK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.maxZCellId, sidePhotoK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.maxXCellId, sidePhotoK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.minZCellId, sidePhotoK);
+            _photosyntesisProcess.Process(Trees, _cellGrid.minXCellId, sidePhotoK);
         }
 
 

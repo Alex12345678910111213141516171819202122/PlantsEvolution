@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 namespace PlantsEvolution
 {
 public class PhotosyntesisProcess
 {
-    public const int MaxPhotosyntesisKCount = 100; 
+    public const int MaxPhotosyntesisKCount = 150; 
 
     public const float PhotosyntesisK = 1f;
 public void Process(List<TreeElement> treeElements, int[,] CellIds, float k = PhotosyntesisK)
@@ -14,8 +15,10 @@ public void Process(List<TreeElement> treeElements, int[,] CellIds, float k = Ph
         if (id != -1)
         {
             TreeElement tree = treeElements.Find(t => t.TreeID == id);
+
             int CellsCount = tree.GroupPositions.Count;
-            float countK = Mathf.Clamp01(CellsCount/MaxPhotosyntesisKCount);
+            float countK =  Mathf.Clamp01(CellsCount/MaxPhotosyntesisKCount)/3f;
+
             if (tree != null)
             {
                 float efficiency = 1 * k * (1.05f - countK);

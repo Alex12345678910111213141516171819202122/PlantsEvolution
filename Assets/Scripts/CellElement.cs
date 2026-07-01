@@ -13,7 +13,7 @@ public class CellElement
             CellGenNumber = cellGenNumber;
         }
         public int CellID { get; private set; }
-        public byte CellGenNumber { get; private set; }
+        public byte  CellGenNumber{ get; private set; }
 
     }
 }

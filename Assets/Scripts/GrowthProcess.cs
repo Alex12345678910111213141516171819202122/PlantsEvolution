@@ -101,7 +101,10 @@ namespace PlantsEvolution
                             Vector3 newPosition = position + growthOffsets[i];
                             if (AddCell(cellGrid, tree, genValue, newPosition))
                             {
-                                tree.PointElement.Remove(4);
+                                int MaxPhotosyntesisKCount = 150;
+                                int CellsCount = tree.GroupPositions.Count;
+                                float countK = Mathf.Clamp01(CellsCount/MaxPhotosyntesisKCount);
+                                tree.PointElement.Remove(4 + (countK*110));
                                 availableGrowths -= 1;
                                 grewUp = true;
                             }
